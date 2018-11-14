@@ -1,8 +1,8 @@
 use std::collections::HashMap;
+use std::cell::RefCell;
 
 use cgmath::conv::*;
-use cgmath::prelude::*;
-use cgmath::{Vector3, Matrix4};
+use cgmath::Matrix4;
 
 use glium::texture::{SrgbTexture2d, MipmapsOption, Texture2d, UncompressedFloatFormat};
 use glium::{implement_vertex, uniform, DrawParameters, IndexBuffer, Surface, VertexBuffer};
@@ -15,35 +15,48 @@ struct Vertex {
 
 implement_vertex!(Vertex, tex_coords);
 
-macro_rules! get_shader {
-    ($self:ident, $name:ident) => {
+pub struct Processor<'a> {
+    width: u32,
+    height: u32,
+    pub display: &'a Display,
+    vertex_buffer: VertexBuffer<Vertex>,
+    index_buffer: IndexBuffer<u32>,
+    shaders: RefCell<HashMap<String, glium::Program>>,
+}
+
+macro_rules! draw_with_shader {
+    ($shader_name:ident, $self:ident, $target:ident, $uniforms: expr, $draw_parameters: expr) => {
         {
-            let key = stringify!($name).to_string();
-            if let Some(shader) = $self.shaders.get(&key) {
+            let key = stringify!($shader_name).to_string();
+            let mut shaders = $self.shaders.borrow_mut();
+            let shader = if let Some(shader) = shaders.get(&key) {
                 shader
             } else {
                 let vertex_shader_src = include_str!("shaders/passthrough.vert");
-                let fragment_shader_src = include_str!(concat!("shaders/", stringify!($name), ".frag"));
+                let fragment_shader_src = include_str!(
+                    concat!("shaders/", stringify!($shader_name), ".frag")
+                );
                 let shader = glium::Program::from_source(
                     $self.display,
                     vertex_shader_src,
                     fragment_shader_src,
                     None,
                 ).unwrap();
-                $self.shaders.insert(key.clone(), shader);
-                &$self.shaders[&key]
-            }
+                shaders.insert(key.clone(), shader);
+                &shaders[&key]
+            };
+            $target.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
+            $target
+                .draw(
+                    &$self.vertex_buffer,
+                    &$self.index_buffer,
+                    shader,
+                    $uniforms,
+                    $draw_parameters,
+                )
+                .unwrap();
         }
     };
-}
-
-pub struct Processor<'a> {
-    width: u32,
-    height: u32,
-    display: &'a Display,
-    vertex_buffer: VertexBuffer<Vertex>,
-    index_buffer: IndexBuffer<u32>,
-    shaders: HashMap<String, glium::Program>,
 }
 
 #[allow(dead_code)]
@@ -76,13 +89,12 @@ impl<'a> Processor<'a> {
             display,
             vertex_buffer,
             index_buffer,
-            shaders: HashMap::new(),
+            shaders: RefCell::new(HashMap::new()),
         }
     }
 
-    pub fn transform(&mut self, texture: &Texture2d, transform: Matrix4<f32>) -> Texture2d {
+    pub fn transform(&self, texture: &Texture2d, transform: Matrix4<f32>) -> Texture2d {
         // Simple passthrough works with proper texture types
-        let shader = get_shader!(self, transform);
         let uniforms = uniform! {
             image: texture,
             transform: array4x4(transform),
@@ -98,35 +110,11 @@ impl<'a> Processor<'a> {
             self.height,
         ).unwrap();
         let mut target = output.as_surface();
-        target.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
-        target
-            .draw(
-                &self.vertex_buffer,
-                &self.index_buffer,
-                shader,
-                &uniforms,
-                &draw_parameters,
-            )
-            .unwrap();
+        draw_with_shader!(transform, self, target, &uniforms, &draw_parameters);
         output
     }
 
-    pub fn scale(&mut self, texture: &Texture2d, scale: Vector3<f32>) -> Texture2d {
-        let mat = Matrix4::from_diagonal(scale.extend(1.0));
-        self.transform(texture, mat)
-    }
-
-    pub fn permute(&mut self, texture: &Texture2d, permutation: Vector3<usize>) -> Texture2d {
-        let mut mat = Matrix4::from_value(0.0);
-        for i in 0..3 {
-            mat[i][permutation[i]] = 1.0;
-        }
-        self.transform(texture, mat)
-    }
-
-    pub fn channels(&mut self, r: &Texture2d, g: &Texture2d, b: &Texture2d) -> Texture2d {
-        // Simple passthrough works with proper texture types
-        let shader = get_shader!(self, channels);
+    pub fn channels(&self, r: &Texture2d, g: &Texture2d, b: &Texture2d) -> Texture2d {
         let uniforms = uniform! {
             r: r,
             g: g,
@@ -143,21 +131,11 @@ impl<'a> Processor<'a> {
             self.height,
         ).unwrap();
         let mut target = output.as_surface();
-        target.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
-        target
-            .draw(
-                &self.vertex_buffer,
-                &self.index_buffer,
-                shader,
-                &uniforms,
-                &draw_parameters,
-            )
-            .unwrap();
+        draw_with_shader!(channels, self, target, &uniforms, &draw_parameters);
         output
     }
-    pub fn make_linear(&mut self, texture: &SrgbTexture2d) -> Texture2d {
-        // Simple passthrough works with proper texture types
-        let shader = get_shader!(self, visualize);
+
+    pub fn make_linear(&self, texture: &SrgbTexture2d) -> Texture2d {
         let uniforms = uniform! {
             image: texture,
         };
@@ -172,21 +150,11 @@ impl<'a> Processor<'a> {
             self.height,
         ).unwrap();
         let mut target = output.as_surface();
-        target.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
-        target
-            .draw(
-                &self.vertex_buffer,
-                &self.index_buffer,
-                shader,
-                &uniforms,
-                &draw_parameters,
-            )
-            .unwrap();
+        draw_with_shader!(visualize, self, target, &uniforms, &draw_parameters);
         output
     }
 
-    pub fn visualize(&mut self, texture: &Texture2d) {
-        let shader = get_shader!(self, visualize);
+    pub fn visualize(&self, texture: &Texture2d) {
         let uniforms = uniform! {
             image: texture,
         };
@@ -194,16 +162,7 @@ impl<'a> Processor<'a> {
             ..Default::default()
         };
         let mut target = self.display.draw();
-        target.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
-        target
-            .draw(
-                &self.vertex_buffer,
-                &self.index_buffer,
-                shader,
-                &uniforms,
-                &draw_parameters,
-            )
-            .unwrap();
+        draw_with_shader!(visualize, self, target, &uniforms, &draw_parameters);
         target.finish().unwrap();
     }
 }
