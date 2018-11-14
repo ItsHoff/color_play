@@ -1,5 +1,9 @@
 use std::collections::HashMap;
 
+use cgmath::conv::*;
+use cgmath::prelude::*;
+use cgmath::{Vector3, Matrix4};
+
 use glium::texture::{SrgbTexture2d, MipmapsOption, Texture2d, UncompressedFloatFormat};
 use glium::{implement_vertex, uniform, DrawParameters, IndexBuffer, Surface, VertexBuffer};
 use glium::backend::glutin::Display;
@@ -75,11 +79,13 @@ impl<'a> Processor<'a> {
             shaders: HashMap::new(),
         }
     }
-    pub fn scale(&mut self, texture: &Texture2d, scale: [f32; 3]) -> Texture2d {
-        let shader = get_shader!(self, scale);
+
+    pub fn transform(&mut self, texture: &Texture2d, transform: Matrix4<f32>) -> Texture2d {
+        // Simple passthrough works with proper texture types
+        let shader = get_shader!(self, transform);
         let uniforms = uniform! {
             image: texture,
-            scale: scale,
+            transform: array4x4(transform),
         };
         let draw_parameters = DrawParameters {
             ..Default::default()
@@ -105,34 +111,17 @@ impl<'a> Processor<'a> {
         output
     }
 
-    pub fn permute(&mut self, texture: &Texture2d, permutation: [u32; 3]) -> Texture2d {
-        let shader = get_shader!(self, permute);
-        let uniforms = uniform! {
-            image: texture,
-            permutation: permutation,
-        };
-        let draw_parameters = DrawParameters {
-            ..Default::default()
-        };
-        let output = Texture2d::empty_with_format(
-            self.display,
-            UncompressedFloatFormat::F32F32F32F32,
-            MipmapsOption::NoMipmap,
-            self.width,
-            self.height,
-        ).unwrap();
-        let mut target = output.as_surface();
-        target.clear_color_and_depth((0.0, 0.0, 0.0, 1.0), 1.0);
-        target
-            .draw(
-                &self.vertex_buffer,
-                &self.index_buffer,
-                shader,
-                &uniforms,
-                &draw_parameters,
-            )
-            .unwrap();
-        output
+    pub fn scale(&mut self, texture: &Texture2d, scale: Vector3<f32>) -> Texture2d {
+        let mat = Matrix4::from_diagonal(scale.extend(1.0));
+        self.transform(texture, mat)
+    }
+
+    pub fn permute(&mut self, texture: &Texture2d, permutation: Vector3<usize>) -> Texture2d {
+        let mut mat = Matrix4::from_value(0.0);
+        for i in 0..3 {
+            mat[i][permutation[i]] = 1.0;
+        }
+        self.transform(texture, mat)
     }
 
     pub fn channels(&mut self, r: &Texture2d, g: &Texture2d, b: &Texture2d) -> Texture2d {
@@ -166,7 +155,6 @@ impl<'a> Processor<'a> {
             .unwrap();
         output
     }
-
     pub fn make_linear(&mut self, texture: &SrgbTexture2d) -> Texture2d {
         // Simple passthrough works with proper texture types
         let shader = get_shader!(self, visualize);

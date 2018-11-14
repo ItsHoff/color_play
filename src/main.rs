@@ -4,6 +4,8 @@ use std::path::{Path, PathBuf};
 use std::thread;
 use std::time::Duration;
 
+use cgmath::{Vector3, Matrix4};
+
 use glium::backend::Facade;
 use glium::glutin::{Event, WindowEvent, dpi::LogicalSize};
 use glium::texture::{RawImage2d, SrgbTexture2d};
@@ -31,9 +33,7 @@ fn main() {
     let tex1 = processor.make_linear(&tex1);
     let tex2 = load_image(&display, &root_dir.join("images/2.jpg"));
     let tex2 = processor.make_linear(&tex2);
-    let tex = processor.channels(&tex1, &tex2, &tex2);
-    let tex = processor.scale(&tex, [1.0, 0.0, 1.0]);
-    let tex = processor.permute(&tex, [1, 2, 0]);
+    let tex = processor.permute(&tex1, Vector3::new(2, 0, 1));
 
     loop {
         processor.visualize(&tex);
