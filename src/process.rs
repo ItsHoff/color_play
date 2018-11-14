@@ -114,6 +114,27 @@ impl<'a> Processor<'a> {
         output
     }
 
+    pub fn diff(&self, tex1: &Texture2d, tex2: &Texture2d, use_abs: bool) -> Texture2d {
+        let uniforms = uniform! {
+            tex1: tex1,
+            tex2: tex2,
+            use_abs: use_abs,
+        };
+        let draw_parameters = DrawParameters {
+            ..Default::default()
+        };
+        let output = Texture2d::empty_with_format(
+            self.display,
+            UncompressedFloatFormat::F32F32F32F32,
+            MipmapsOption::NoMipmap,
+            self.width,
+            self.height,
+        ).unwrap();
+        let mut target = output.as_surface();
+        draw_with_shader!(diff, self, target, &uniforms, &draw_parameters);
+        output
+    }
+
     pub fn channels(&self, r: &Texture2d, g: &Texture2d, b: &Texture2d) -> Texture2d {
         let uniforms = uniform! {
             r: r,

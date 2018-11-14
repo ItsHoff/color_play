@@ -79,4 +79,12 @@ impl<'a> Image<'a> {
     pub fn visualize(&self) {
         self.processor.visualize(&self.texture);
     }
+
+    pub fn diff(i1: &Self, i2: &Self, use_abs: bool) -> Self {
+        let texture = Rc::new(i1.processor.diff(&i1.texture, &i2.texture, use_abs));
+        Self {
+            texture,
+            processor: i1.processor,
+        }
+    }
 }
