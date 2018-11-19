@@ -131,4 +131,12 @@ impl<'a> Image<'a> {
             processor: i1.processor,
         }
     }
+
+    pub fn channels(r: &Self, g: &Self, b: &Self) -> Self {
+        let texture = Rc::new(r.processor.channels(&r.texture, &g.texture, &b.texture));
+        Self {
+            texture,
+            processor: r.processor,
+        }
+    }
 }
