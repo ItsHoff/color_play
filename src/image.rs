@@ -47,33 +47,77 @@ impl<'a> Image<'a> {
         }
     }
 
-    pub fn r(self) -> Self {
+    pub fn r(&self) -> Self {
         self.scale(1.0, 0.0, 0.0)
     }
 
-    pub fn g(self) -> Self {
+    pub fn g(&self) -> Self {
         self.scale(0.0, 1.0, 0.0)
     }
 
-    pub fn b(self) -> Self {
+    pub fn b(&self) -> Self {
         self.scale(0.0, 0.0, 1.0)
     }
 
-    pub fn scale(mut self, x: f32, y: f32, z: f32) -> Self {
-        let diag = Vector4::new(x, y, z, 1.0);
-        let mat = Matrix4::from_diagonal(diag);
-        self.texture = Rc::new(self.processor.transform(&self.texture, mat));
-        self
+    pub fn x(&self) -> Self {
+        self.r()
     }
 
-    pub fn permute(mut self, x: usize, y: usize, z: usize) -> Self {
+    pub fn y(&self) -> Self {
+        self.g()
+    }
+
+    pub fn z(&self) -> Self {
+        self.b()
+    }
+
+    pub fn scale(&self, x: f32, y: f32, z: f32) -> Self {
+        let diag = Vector4::new(x, y, z, 1.0);
+        let mat = Matrix4::from_diagonal(diag);
+        Self {
+            texture: Rc::new(self.processor.transform(&self.texture, mat)),
+            processor: self.processor,
+        }
+    }
+
+    pub fn permute(&self, x: usize, y: usize, z: usize) -> Self {
         let mut mat = Matrix4::from_value(0.0);
         mat.x[x] = 1.0;
         mat.y[y] = 1.0;
         mat.z[z] = 1.0;
         mat.w.w = 1.0;
-        self.texture = Rc::new(self.processor.transform(&self.texture, mat));
-        self
+        Self {
+            texture: Rc::new(self.processor.transform(&self.texture, mat)),
+            processor: self.processor,
+        }
+    }
+
+    #[allow(clippy::unreadable_literal)]
+    pub fn rgb_to_xyz(&self) -> Self {
+        let to_xyz = Matrix4::new(
+            0.412453, 0.35758, 0.180423, 0.0,
+            0.212671, 0.71516, 0.072169, 0.0,
+            0.019334, 0.119193, 0.950227, 0.0,
+            0.0, 0.0, 0.0, 1.0
+        );
+        Self {
+            texture: Rc::new(self.processor.transform(&self.texture, to_xyz)),
+            processor: self.processor,
+        }
+    }
+
+    #[allow(clippy::unreadable_literal)]
+    pub fn xyz_to_rgb(&self) -> Self {
+        let to_rgb = Matrix4::new(
+            3.240479, -1.53715, -0.498535, 0.0,
+            -0.969256, 1.875991, 0.041556, 0.0,
+            0.055648, -0.204043, 1.057311, 0.0,
+            0.0, 0.0, 0.0, 1.0
+        );
+        Self {
+            texture: Rc::new(self.processor.transform(&self.texture, to_rgb)),
+            processor: self.processor,
+        }
     }
 
     pub fn visualize(&self) {
