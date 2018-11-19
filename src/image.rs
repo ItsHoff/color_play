@@ -86,6 +86,7 @@ impl<'a> Image<'a> {
         mat.y[y] = 1.0;
         mat.z[z] = 1.0;
         mat.w.w = 1.0;
+        let mat = mat.transpose();
         Self {
             texture: Rc::new(self.processor.transform(&self.texture, mat)),
             processor: self.processor,
@@ -99,7 +100,7 @@ impl<'a> Image<'a> {
             0.212671, 0.71516, 0.072169, 0.0,
             0.019334, 0.119193, 0.950227, 0.0,
             0.0, 0.0, 0.0, 1.0
-        );
+        ).transpose();
         Self {
             texture: Rc::new(self.processor.transform(&self.texture, to_xyz)),
             processor: self.processor,
@@ -113,7 +114,7 @@ impl<'a> Image<'a> {
             -0.969256, 1.875991, 0.041556, 0.0,
             0.055648, -0.204043, 1.057311, 0.0,
             0.0, 0.0, 0.0, 1.0
-        );
+        ).transpose();
         Self {
             texture: Rc::new(self.processor.transform(&self.texture, to_rgb)),
             processor: self.processor,
