@@ -47,6 +47,22 @@ impl<'a> Image<'a> {
         }
     }
 
+    pub fn random(processor: &'a Processor<'a>) -> Self {
+        let w = processor.width;
+        let h = processor.height;
+        let len = (3 * w * h) as usize;
+        let mut data = Vec::with_capacity(len);
+        for _ in 0..len {
+            data.push(rand::random::<f32>());
+        }
+        let tex_image = RawImage2d::from_raw_rgb_reversed(&data, (w, h));
+        let srgb = SrgbTexture2d::new(processor.display, tex_image).unwrap();
+        let texture = processor.make_linear(&srgb);
+        Self {
+            texture: Rc::new(texture), processor
+        }
+    }
+
     pub fn r(&self) -> Self {
         self.scale(1.0, 0.0, 0.0)
     }

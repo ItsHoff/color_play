@@ -16,8 +16,8 @@ struct Vertex {
 implement_vertex!(Vertex, tex_coords);
 
 pub struct Processor<'a> {
-    width: u32,
-    height: u32,
+    pub width: u32,
+    pub height: u32,
     pub display: &'a Display,
     vertex_buffer: VertexBuffer<Vertex>,
     index_buffer: IndexBuffer<u32>,
