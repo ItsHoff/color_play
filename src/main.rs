@@ -24,14 +24,17 @@ fn main() {
     let processor = Processor::new(&display, width, height);
     let root_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let tex1 = Image::new(&processor, &root_dir.join("images/1.jpg"))
-        .rgb_to_xyz();
+        // .rgb_to_xyz()
+        ;
     let tex2 = Image::new(&processor, &root_dir.join("images/2.jpg"))
-        .rgb_to_xyz();
+        // .rgb_to_xyz()
+        ;
     let random = Image::random(&processor)
-        .rgb_to_xyz();
+        // .rgb_to_xyz()
+        ;
 
     loop {
-        Image::channels(&tex1.x(), &random.y(), &random.z()).visualize();
+        Image::diff(&tex1, &Image::add(&tex1, &tex2), true).visualize();
         let mut quit = false;
         events_loop.poll_events(|event| match event {
             Event::WindowEvent {

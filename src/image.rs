@@ -86,6 +86,9 @@ impl<'a> Image<'a> {
     pub fn z(&self) -> Self {
         self.b()
     }
+    pub fn uscale(&self, scale: f32) -> Self {
+        self.scale(scale, scale, scale)
+    }
 
     pub fn scale(&self, x: f32, y: f32, z: f32) -> Self {
         let diag = Vector4::new(x, y, z, 1.0);
@@ -143,6 +146,14 @@ impl<'a> Image<'a> {
 
     pub fn diff(i1: &Self, i2: &Self, use_abs: bool) -> Self {
         let texture = Rc::new(i1.processor.diff(&i1.texture, &i2.texture, use_abs));
+        Self {
+            texture,
+            processor: i1.processor,
+        }
+    }
+
+    pub fn add(i1: &Self, i2: &Self) -> Self {
+        let texture = Rc::new(i1.processor.add(&i1.texture, &i2.texture));
         Self {
             texture,
             processor: i1.processor,
