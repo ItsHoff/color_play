@@ -7,6 +7,7 @@ use cgmath::{Matrix4, Vector2};
 use glium::texture::{SrgbTexture2d, MipmapsOption, Texture2d, UncompressedFloatFormat};
 use glium::{implement_vertex, uniform, DrawParameters, IndexBuffer, Surface, VertexBuffer};
 use glium::backend::glutin::Display;
+use glium::framebuffer::SimpleFrameBuffer;
 
 #[derive(Clone, Copy)]
 struct Vertex {
@@ -197,7 +198,7 @@ impl<'a> Processor<'a> {
         output
     }
 
-    pub fn make_linear(&self, texture: &SrgbTexture2d) -> Texture2d {
+    pub fn srgb_to_linear(&self, texture: &SrgbTexture2d) -> Texture2d {
         let uniforms = uniform! {
             image: texture,
         };
@@ -212,6 +213,23 @@ impl<'a> Processor<'a> {
             self.height,
         ).unwrap();
         let mut target = output.as_surface();
+        draw_with_shader!(visualize, self, target, &uniforms, &draw_parameters);
+        output
+    }
+
+    pub fn linear_to_srgb(&self, texture: &Texture2d) -> SrgbTexture2d {
+        let uniforms = uniform! {
+            image: texture,
+        };
+        let draw_parameters = DrawParameters {
+            ..Default::default()
+        };
+        let output = SrgbTexture2d::empty(
+            self.display,
+            self.width,
+            self.height,
+        ).unwrap();
+        let mut target = SimpleFrameBuffer::new(self.display, &output).unwrap();
         draw_with_shader!(visualize, self, target, &uniforms, &draw_parameters);
         output
     }

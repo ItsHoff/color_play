@@ -24,10 +24,11 @@ fn main() {
     let processor = Processor::new(&display, width, height);
     let root_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let tex1 = Image::new(&processor, &root_dir.join("images/1.jpg"));
-    let res = Image::channels(&tex1, &tex1.shift(0.003, 0.003), &tex1.shift(0.006, 0.006));
     let tex2 = Image::new(&processor, &root_dir.join("images/2.jpg"));
     let random = Image::random(&processor);
+    let res = random;
 
+    res.save(&root_dir.join("images/saved.png"));
     loop {
         res.visualize();
         let mut quit = false;

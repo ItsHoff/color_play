@@ -8,7 +8,7 @@ use cgmath::{Matrix4, Vector4, Vector2};
 
 use glium::texture::{RawImage2d, SrgbTexture2d, Texture2d};
 
-use image::{GenericImage, ImageFormat};
+use image::{GenericImage, ImageFormat, RgbaImage};
 
 use crate::process::Processor;
 
@@ -41,7 +41,7 @@ impl<'a> Image<'a> {
         let image_dim = image.dimensions();
         let tex_image = RawImage2d::from_raw_rgb_reversed(&image.to_rgb().into_raw(), image_dim);
         let srgb = SrgbTexture2d::new(processor.display, tex_image).unwrap();
-        let texture = processor.make_linear(&srgb);
+        let texture = processor.srgb_to_linear(&srgb);
         Self {
             texture: Rc::new(texture), processor
         }
@@ -55,9 +55,8 @@ impl<'a> Image<'a> {
         for _ in 0..len {
             data.push(rand::random::<f32>());
         }
-        let tex_image = RawImage2d::from_raw_rgb_reversed(&data, (w, h));
-        let srgb = SrgbTexture2d::new(processor.display, tex_image).unwrap();
-        let texture = processor.make_linear(&srgb);
+        let tex_image = RawImage2d::from_raw_rgb(data, (w, h));
+        let texture = Texture2d::new(processor.display, tex_image).unwrap();
         Self {
             texture: Rc::new(texture), processor
         }
@@ -149,6 +148,16 @@ impl<'a> Image<'a> {
 
     pub fn visualize(&self) {
         self.processor.visualize(&self.texture);
+    }
+
+    pub fn save(&self, path: &Path) {
+        let srgb = self.processor.linear_to_srgb(&self.texture);
+        let pb = srgb.read_to_pixel_buffer();
+        let raw_image: RawImage2d<u8> = pb.read_as_texture_2d().unwrap();
+        let image = RgbaImage::from_vec(self.processor.width, self.processor.height,
+                                        raw_image.data.to_vec()).unwrap();
+        let image = image::imageops::flip_vertical(&image);
+        image.save(path).unwrap();
     }
 
     pub fn diff(i1: &Self, i2: &Self, use_abs: bool) -> Self {
