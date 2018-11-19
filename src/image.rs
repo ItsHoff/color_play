@@ -4,7 +4,7 @@ use std::io::BufReader;
 use std::path::Path;
 
 use cgmath::prelude::*;
-use cgmath::{Matrix4, Vector4};
+use cgmath::{Matrix4, Vector4, Vector2};
 
 use glium::texture::{RawImage2d, SrgbTexture2d, Texture2d};
 
@@ -95,6 +95,13 @@ impl<'a> Image<'a> {
         let mat = Matrix4::from_diagonal(diag);
         Self {
             texture: Rc::new(self.processor.transform(&self.texture, mat)),
+            processor: self.processor,
+        }
+    }
+
+    pub fn shift(&self, x: f32, y: f32) -> Self {
+        Self {
+            texture: Rc::new(self.processor.shift(&self.texture, Vector2::new(x, y))),
             processor: self.processor,
         }
     }

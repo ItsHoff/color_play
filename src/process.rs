@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::cell::RefCell;
 
 use cgmath::conv::*;
-use cgmath::Matrix4;
+use cgmath::{Matrix4, Vector2};
 
 use glium::texture::{SrgbTexture2d, MipmapsOption, Texture2d, UncompressedFloatFormat};
 use glium::{implement_vertex, uniform, DrawParameters, IndexBuffer, Surface, VertexBuffer};
@@ -111,6 +111,27 @@ impl<'a> Processor<'a> {
         ).unwrap();
         let mut target = output.as_surface();
         draw_with_shader!(transform, self, target, &uniforms, &draw_parameters);
+        output
+    }
+
+    pub fn shift(&self, texture: &Texture2d, shift: Vector2<f32>) -> Texture2d {
+        // Simple passthrough works with proper texture types
+        let uniforms = uniform! {
+            image: texture,
+            shift: array2(shift),
+        };
+        let draw_parameters = DrawParameters {
+            ..Default::default()
+        };
+        let output = Texture2d::empty_with_format(
+            self.display,
+            UncompressedFloatFormat::F32F32F32F32,
+            MipmapsOption::NoMipmap,
+            self.width,
+            self.height,
+        ).unwrap();
+        let mut target = output.as_surface();
+        draw_with_shader!(shift, self, target, &uniforms, &draw_parameters);
         output
     }
 
