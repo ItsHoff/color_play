@@ -26,7 +26,9 @@ fn main() {
     let tex1 = Image::new(&processor, &root_dir.join("images/1.jpg"));
     let tex2 = Image::new(&processor, &root_dir.join("images/2.jpg"));
     let random = Image::random(&processor);
-    let res = random;
+    let black = Image::grayscale(&processor, 0.0);
+    let white = Image::grayscale(&processor, 1.0);
+    let res = mix_chroma_luma(&white, &tex2);
 
     res.save(&root_dir.join("images/saved.png"));
     loop {
@@ -44,4 +46,10 @@ fn main() {
         }
         thread::sleep(Duration::from_millis(100));
     }
+}
+
+fn mix_chroma_luma<'a>(tex1: &'a Image, tex2: &'a Image) -> Image<'a> {
+    let chroma = tex1.rgb_to_xyz();
+    let luma = tex2.rgb_to_xyz();
+    Image::channels(&chroma, &luma, &chroma).xyz_to_rgb()
 }
