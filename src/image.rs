@@ -62,6 +62,19 @@ impl<'a> Image<'a> {
         }
     }
 
+    pub fn grayscale(processor: &'a Processor<'a>, val: f32) -> Self {
+        Self::monochrome(processor, val, val, val)
+    }
+
+    pub fn monochrome(processor: &'a Processor<'a>, r: f32, g: f32, b: f32) -> Self {
+        let data = vec!(r, g, b);
+        let tex_image = RawImage2d::from_raw_rgb(data, (1, 1));
+        let texture = Texture2d::new(processor.display, tex_image).unwrap();
+        Self {
+            texture: Rc::new(texture), processor
+        }
+    }
+
     pub fn r(&self) -> Self {
         self.scale(1.0, 0.0, 0.0)
     }
