@@ -5,9 +5,12 @@ use std::time::Duration;
 use glium::glutin::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent, dpi::LogicalSize};
 
 mod image;
+mod presentation;
 mod process;
+mod scene;
 
 use self::image::Image;
+use self::presentation::Presentation;
 use self::process::Processor;
 
 /// Convert u8 color to float color in range [0, 1]
@@ -32,76 +35,61 @@ fn main() {
     std::fs::create_dir_all(output_dir.clone()).unwrap();
     let image_dir = root_dir.join("images");
 
-    let tex = Image::new(&processor, &image_dir.join("2.jpg"));
-    // luma_random_mixes(&tex, &output_dir);
-    // pink_scale(&tex, &output_dir);
+    // let tex = Image::new(&processor, &image_dir.join("2.jpg"));
+    // let backgrounds = vec!(
+    //     Image::random(&processor),
+    //     Image::grayscale(&processor, 1.0),
+    //     Image::grayscale(&processor, 0.0),
+    //     Image::new(&processor, &image_dir.join("2.jpg")),
+    // );
 
-    let mask = Image::new(&processor, &image_dir.join("pikachu.jpg"));
-    let neg_mask = Image::diff(&mask, &Image::grayscale(&processor, 1.0), true);
-    let backgrounds = vec!(
-        Image::random(&processor),
-        Image::grayscale(&processor, 1.0),
-        Image::grayscale(&processor, 0.0),
-        Image::new(&processor, &image_dir.join("2.jpg")),
-    );
-
-    let mut shift = true;
-    let mut scale = 0.0;
-    let mut background = &backgrounds[0];
-    let mut mode = 7;
+    // let mut shift = true;
+    // let mut scale = 0.0;
+    // let mut background = &backgrounds[0];
+    // let mut mode = 7;
+    let mut presentation = Presentation::new(&processor, &image_dir);
     loop {
-        let (dx, dy) = if shift {
-            rand::random::<(f32, f32)>()
-        } else {
-            (0.0, 0.0)
-        };
-        let res = if mode == 0 {
-            // Movement image
-            let shifted_bg = background.shift(dx, dy);
-            let mask_bg = Image::mul(&shifted_bg, &neg_mask);
-            let mask_fg = Image::add(&Image::mul(&background, &mask).uscale(1.0 - scale),
-                                     &mask.uscale(0.5 * scale));
-            Image::add(&mask_bg, &mask_fg)
-        } else if mode == 1 {
-            let shifted_bg = background.shift(dx, dy);
-            let r = Image::add(&shifted_bg.r().uscale(1.0 - scale), &tex.r().uscale(scale));
-            Image::channels(&r, &shifted_bg, &shifted_bg)
-        } else if mode == 2 {
-            let shifted_bg = background.shift(dx, dy);
-            let g = Image::add(&shifted_bg.g().uscale(1.0 - scale), &tex.g().uscale(scale));
-            Image::channels(&shifted_bg, &g, &shifted_bg)
-        } else if mode == 3 {
-            let shifted_bg = background.shift(dx, dy);
-            let b = Image::add(&shifted_bg.b().uscale(1.0 - scale), &tex.b().uscale(scale));
-            Image::channels(&shifted_bg, &shifted_bg, &b)
-        } else if mode == 4 {
-            let shifted_bg = background.shift(dx, dy).rgb_to_xyz();
-            let xyz = tex.rgb_to_xyz();
-            let x = Image::add(&shifted_bg.x().uscale(1.0 - scale), &xyz.x().uscale(scale));
-            Image::channels(&x, &shifted_bg, &shifted_bg).xyz_to_rgb()
-        } else if mode == 5 {
-            let shifted_bg = background.shift(dx, dy).rgb_to_xyz();
-            let xyz = tex.rgb_to_xyz();
-            let y = Image::add(&shifted_bg.y().uscale(1.0 - scale), &xyz.y().uscale(scale));
-            Image::diff(&Image::channels(&shifted_bg, &y, &shifted_bg).xyz_to_rgb(),
-                        &Image::grayscale(&processor, 0.0), true)
-        } else if mode == 6 {
-            let shifted_bg = background.shift(dx, dy).rgb_to_xyz();
-            let xyz = tex.rgb_to_xyz();
-            let z = Image::add(&shifted_bg.z().uscale(1.0 - scale), &xyz.z().uscale(scale));
-            Image::channels(&shifted_bg, &shifted_bg, &z).xyz_to_rgb()
-        } else if mode == 7 {
-            tex.permute(1, 0, 2)
-        } else if mode == 8 {
-            tex.permute(0, 2, 1)
-        } else if mode == 9 {
-            tex.permute(2, 1, 0)
-        } else if mode == 10 {
-            tex.permute(1, 2, 0)
-        } else {
-            tex.rgb_to_xyz().xyz_to_rgb()
-        };
-        res.visualize();
+        // let res = if mode == 0 {
+        // } else if mode == 1 {
+        //     let shifted_bg = background.shift(dx, dy);
+        //     let r = Image::add(&shifted_bg.r().uscale(1.0 - scale), &tex.r().uscale(scale));
+        //     Image::channels(&r, &shifted_bg, &shifted_bg)
+        // } else if mode == 2 {
+        //     let shifted_bg = background.shift(dx, dy);
+        //     let g = Image::add(&shifted_bg.g().uscale(1.0 - scale), &tex.g().uscale(scale));
+        //     Image::channels(&shifted_bg, &g, &shifted_bg)
+        // } else if mode == 3 {
+        //     let shifted_bg = background.shift(dx, dy);
+        //     let b = Image::add(&shifted_bg.b().uscale(1.0 - scale), &tex.b().uscale(scale));
+        //     Image::channels(&shifted_bg, &shifted_bg, &b)
+        // } else if mode == 4 {
+        //     let shifted_bg = background.shift(dx, dy).rgb_to_xyz();
+        //     let xyz = tex.rgb_to_xyz();
+        //     let x = Image::add(&shifted_bg.x().uscale(1.0 - scale), &xyz.x().uscale(scale));
+        //     Image::channels(&x, &shifted_bg, &shifted_bg).xyz_to_rgb()
+        // } else if mode == 5 {
+        //     let shifted_bg = background.shift(dx, dy).rgb_to_xyz();
+        //     let xyz = tex.rgb_to_xyz();
+        //     let y = Image::add(&shifted_bg.y().uscale(1.0 - scale), &xyz.y().uscale(scale));
+        //     Image::diff(&Image::channels(&shifted_bg, &y, &shifted_bg).xyz_to_rgb(),
+        //                 &Image::grayscale(&processor, 0.0), true)
+        // } else if mode == 6 {
+        //     let shifted_bg = background.shift(dx, dy).rgb_to_xyz();
+        //     let xyz = tex.rgb_to_xyz();
+        //     let z = Image::add(&shifted_bg.z().uscale(1.0 - scale), &xyz.z().uscale(scale));
+        //     Image::channels(&shifted_bg, &shifted_bg, &z).xyz_to_rgb()
+        // } else if mode == 7 {
+        //     tex.permute(1, 0, 2)
+        // } else if mode == 8 {
+        //     tex.permute(0, 2, 1)
+        // } else if mode == 9 {
+        //     tex.permute(2, 1, 0)
+        // } else if mode == 10 {
+        //     tex.permute(1, 2, 0)
+        // } else {
+        //     tex.rgb_to_xyz().xyz_to_rgb()
+        // };
+        presentation.image().visualize();
         let mut quit = false;
         events_loop.poll_events(|event| match event {
             Event::WindowEvent {
@@ -116,66 +104,27 @@ fn main() {
                     state: ElementState::Released,
                     virtual_keycode: Some(VirtualKeyCode::Space),
                     ..
-                } => shift = !shift,
+                } => presentation.toggle(),
                 KeyboardInput {
                     state: ElementState::Released,
                     virtual_keycode: Some(VirtualKeyCode::Up),
                     ..
-                } => {
-                    scale += 0.05;
-                    scale = scale.min(1.0);
-                    println!("Scale: {}", scale);
-                }
+                } => presentation.previous_view(),
                 KeyboardInput {
                     state: ElementState::Released,
                     virtual_keycode: Some(VirtualKeyCode::Down),
                     ..
-                } => {
-                    scale -= 0.05;
-                    scale = scale.max(0.0);
-                    println!("Scale: {}", scale);
-                }
+                } => presentation.next_view(),
                 KeyboardInput {
                     state: ElementState::Released,
                     virtual_keycode: Some(VirtualKeyCode::Right),
                     ..
-                } => {
-                    mode += 1;
-                    println!("Mode: {}", mode);
-                }
+                } => presentation.next_scene(),
                 KeyboardInput {
                     state: ElementState::Released,
                     virtual_keycode: Some(VirtualKeyCode::Left),
                     ..
-                } => {
-                    mode -= 1;
-                    println!("Mode: {}", mode);
-                }
-                KeyboardInput {
-                    state: ElementState::Released,
-                    virtual_keycode: Some(VirtualKeyCode::Key1),
-                    ..
-                } => background = &backgrounds[0],
-                KeyboardInput {
-                    state: ElementState::Released,
-                    virtual_keycode: Some(VirtualKeyCode::Key2),
-                    ..
-                } => background = &backgrounds[1],
-                KeyboardInput {
-                    state: ElementState::Released,
-                    virtual_keycode: Some(VirtualKeyCode::Key3),
-                    ..
-                } => background = &backgrounds[2],
-                KeyboardInput {
-                    state: ElementState::Released,
-                    virtual_keycode: Some(VirtualKeyCode::Key4),
-                    ..
-                } => background = &backgrounds[3],
-                KeyboardInput {
-                    state: ElementState::Released,
-                    virtual_keycode: Some(VirtualKeyCode::Key5),
-                    ..
-                } => background = &backgrounds[4],
+                } => presentation.previous_scene(),
                 _ => (),
             }
             _ => (),
@@ -194,6 +143,7 @@ fn mix_chroma_luma<'a>(tex1: &'a Image, tex2: &'a Image) -> Image<'a> {
     Image::channels(&chroma, &luma, &chroma).xyz_to_rgb()
 }
 
+#[allow(dead_code)]
 fn luma_random_mixes<'a>(tex: &'a Image, dir: &Path) {
     let random = Image::random(tex.processor).rgb_to_xyz();
     let luma = tex.rgb_to_xyz();
@@ -203,6 +153,7 @@ fn luma_random_mixes<'a>(tex: &'a Image, dir: &Path) {
     Image::channels(&luma, &random, &luma).xyz_to_rgb().save(&dir.join("random_y.png"));
 }
 
+#[allow(dead_code)]
 fn pink_scale<'a>(tex: &'a Image, dir: &Path) {
     let pink = Image::monochrome(tex.processor, srgb_to_float(255), srgb_to_float(145), srgb_to_float(175));
     let scale = tex.rgb_to_xyz().single_channel(2);
