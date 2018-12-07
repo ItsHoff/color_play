@@ -15,7 +15,7 @@ use crate::process::Processor;
 #[derive(Clone)]
 pub struct Image<'a> {
     texture: Rc<Texture2d>,
-    processor: &'a Processor<'a>,
+    pub processor: &'a Processor<'a>,
 }
 
 #[allow(dead_code)]
@@ -118,6 +118,10 @@ impl<'a> Image<'a> {
         }
     }
 
+    pub fn single_channel(&self, c: usize) -> Self {
+        self.permute(c, c, c)
+    }
+
     pub fn permute(&self, x: usize, y: usize, z: usize) -> Self {
         let mut mat = Matrix4::from_value(0.0);
         mat.x[x] = 1.0;
@@ -174,25 +178,29 @@ impl<'a> Image<'a> {
     }
 
     pub fn diff(i1: &Self, i2: &Self, use_abs: bool) -> Self {
-        let texture = Rc::new(i1.processor.diff(&i1.texture, &i2.texture, use_abs));
         Self {
-            texture,
+            texture: Rc::new(i1.processor.diff(&i1.texture, &i2.texture, use_abs)),
             processor: i1.processor,
         }
     }
 
     pub fn add(i1: &Self, i2: &Self) -> Self {
-        let texture = Rc::new(i1.processor.add(&i1.texture, &i2.texture));
         Self {
-            texture,
+            texture: Rc::new(i1.processor.add(&i1.texture, &i2.texture)),
+            processor: i1.processor,
+        }
+    }
+
+    pub fn mul(i1: &Self, i2: &Self) -> Self {
+        Self {
+            texture: Rc::new(i1.processor.mul(&i1.texture, &i2.texture)),
             processor: i1.processor,
         }
     }
 
     pub fn channels(r: &Self, g: &Self, b: &Self) -> Self {
-        let texture = Rc::new(r.processor.channels(&r.texture, &g.texture, &b.texture));
         Self {
-            texture,
+            texture: Rc::new(r.processor.channels(&r.texture, &g.texture, &b.texture)),
             processor: r.processor,
         }
     }
