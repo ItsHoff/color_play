@@ -1,9 +1,6 @@
-use std::path::Path;
-
 use cgmath::Vector3;
 
 use crate::image::Image;
-use crate::process::Processor;
 
 use super::{SceneT, ViewChange};
 
@@ -14,13 +11,10 @@ pub struct Permutation<'a> {
 }
 
 impl<'a> Permutation<'a> {
-    pub fn new(processor: &'a Processor, dir: &Path, permutation: Vector3<usize>) -> Self {
-        let mut views = Vec::new();
-        views.push(Image::new(&processor, &dir.join("1.jpg")));
-        views.push(Image::new(&processor, &dir.join("2.jpg")));
+    pub fn new(images: Vec<Image<'a>>, permutation: Vector3<usize>) -> Self {
         Self {
             i: 0,
-            views,
+            views: images,
             permutation,
         }
     }

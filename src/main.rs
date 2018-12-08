@@ -34,61 +34,9 @@ fn main() {
     let output_dir = root_dir.join("results");
     std::fs::create_dir_all(output_dir.clone()).unwrap();
     let image_dir = root_dir.join("images");
-
-    // let tex = Image::new(&processor, &image_dir.join("2.jpg"));
-    // let backgrounds = vec!(
-    //     Image::random(&processor),
-    //     Image::grayscale(&processor, 1.0),
-    //     Image::grayscale(&processor, 0.0),
-    //     Image::new(&processor, &image_dir.join("2.jpg")),
-    // );
-
-    // let mut shift = true;
-    // let mut scale = 0.0;
-    // let mut background = &backgrounds[0];
-    // let mut mode = 7;
     let mut presentation = Presentation::new(&processor, &image_dir);
+
     loop {
-        // let res = if mode == 0 {
-        // } else if mode == 1 {
-        //     let shifted_bg = background.shift(dx, dy);
-        //     let r = Image::add(&shifted_bg.r().uscale(1.0 - scale), &tex.r().uscale(scale));
-        //     Image::channels(&r, &shifted_bg, &shifted_bg)
-        // } else if mode == 2 {
-        //     let shifted_bg = background.shift(dx, dy);
-        //     let g = Image::add(&shifted_bg.g().uscale(1.0 - scale), &tex.g().uscale(scale));
-        //     Image::channels(&shifted_bg, &g, &shifted_bg)
-        // } else if mode == 3 {
-        //     let shifted_bg = background.shift(dx, dy);
-        //     let b = Image::add(&shifted_bg.b().uscale(1.0 - scale), &tex.b().uscale(scale));
-        //     Image::channels(&shifted_bg, &shifted_bg, &b)
-        // } else if mode == 4 {
-        //     let shifted_bg = background.shift(dx, dy).rgb_to_xyz();
-        //     let xyz = tex.rgb_to_xyz();
-        //     let x = Image::add(&shifted_bg.x().uscale(1.0 - scale), &xyz.x().uscale(scale));
-        //     Image::channels(&x, &shifted_bg, &shifted_bg).xyz_to_rgb()
-        // } else if mode == 5 {
-        //     let shifted_bg = background.shift(dx, dy).rgb_to_xyz();
-        //     let xyz = tex.rgb_to_xyz();
-        //     let y = Image::add(&shifted_bg.y().uscale(1.0 - scale), &xyz.y().uscale(scale));
-        //     Image::diff(&Image::channels(&shifted_bg, &y, &shifted_bg).xyz_to_rgb(),
-        //                 &Image::grayscale(&processor, 0.0), true)
-        // } else if mode == 6 {
-        //     let shifted_bg = background.shift(dx, dy).rgb_to_xyz();
-        //     let xyz = tex.rgb_to_xyz();
-        //     let z = Image::add(&shifted_bg.z().uscale(1.0 - scale), &xyz.z().uscale(scale));
-        //     Image::channels(&shifted_bg, &shifted_bg, &z).xyz_to_rgb()
-        // } else if mode == 7 {
-        //     tex.permute(1, 0, 2)
-        // } else if mode == 8 {
-        //     tex.permute(0, 2, 1)
-        // } else if mode == 9 {
-        //     tex.permute(2, 1, 0)
-        // } else if mode == 10 {
-        //     tex.permute(1, 2, 0)
-        // } else {
-        //     tex.rgb_to_xyz().xyz_to_rgb()
-        // };
         presentation.image().visualize();
         let mut quit = false;
         events_loop.poll_events(|event| match event {
