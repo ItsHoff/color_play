@@ -28,6 +28,7 @@ fn main() {
     let context = glium::glutin::ContextBuilder::new().with_depth_buffer(24);
     let display =
         glium::Display::new(window, context, &events_loop).expect("Failed to create display");
+    let mut fullscreen = false;
 
     let processor = Processor::new(&display, width, height);
     let root_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -73,6 +74,20 @@ fn main() {
                     virtual_keycode: Some(VirtualKeyCode::Left),
                     ..
                 } => presentation.previous_scene(),
+                KeyboardInput {
+                    state: ElementState::Released,
+                    virtual_keycode: Some(VirtualKeyCode::F),
+                    ..
+                } => {
+                    let window = display.gl_window();
+                    fullscreen = !fullscreen;
+                    if fullscreen {
+                        let monitor = window.get_current_monitor();
+                        window.set_fullscreen(Some(monitor));
+                    } else {
+                        window.set_fullscreen(None);
+                    }
+                }
                 _ => (),
             }
             _ => (),
