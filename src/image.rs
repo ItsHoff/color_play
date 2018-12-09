@@ -98,6 +98,35 @@ impl<'a> Image<'a> {
         }
     }
 
+    pub fn rgb(processor: &'a Processor<'a>) -> Self {
+        let w = processor.width;
+        let h = processor.height;
+        let len = (3 * w * h) as usize;
+        let mut data = Vec::with_capacity(len);
+        for _ in 0..h {
+            for x in 0..w {
+                if x < w / 3 {
+                    data.push(1.0);
+                    data.push(0.0);
+                    data.push(0.0);
+                } else if  x > 2 * w / 3 {
+                    data.push(0.0);
+                    data.push(0.0);
+                    data.push(1.0);
+                } else {
+                    data.push(0.0);
+                    data.push(1.0);
+                    data.push(0.0);
+                }
+            }
+        }
+        let tex_image = RawImage2d::from_raw_rgb(data, (w, h));
+        let texture = Texture2d::new(processor.display, tex_image).unwrap();
+        Self {
+            texture: Rc::new(texture), processor
+        }
+    }
+
     pub fn r(&self) -> Self {
         self.scale(1.0, 0.0, 0.0)
     }

@@ -35,12 +35,12 @@ impl SceneT for Channels<'_> {
 
     fn image(&self) -> Image {
         let (r, g, b) = match self.i {
-            0 => (&self.images[0], &self.images[1], &self.images[2]),
-            1 => (&self.images[0], &self.images[2], &self.images[1]),
-            2 => (&self.images[1], &self.images[0], &self.images[2]),
-            3 => (&self.images[1], &self.images[2], &self.images[0]),
-            4 => (&self.images[2], &self.images[1], &self.images[0]),
-            5 => (&self.images[2], &self.images[0], &self.images[1]),
+            0 => (&self.images[1], &self.images[0], &self.images[2]),
+            1 => (&self.images[2], &self.images[0], &self.images[1]),
+            2 => (&self.images[0], &self.images[1], &self.images[2]),
+            3 => (&self.images[2], &self.images[1], &self.images[0]),
+            4 => (&self.images[0], &self.images[2], &self.images[1]),
+            5 => (&self.images[1], &self.images[2], &self.images[0]),
             _ => {
                 println!("Invalid channel permutation");
                 return self.images[0].uscale(1.0)

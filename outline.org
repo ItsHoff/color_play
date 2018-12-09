@@ -1,0 +1,36 @@
+* Intro 0 - 2
+** RGB 0
+  * Topic: playing with colors
+  * Though first a bit of intro into computer colors (RGB)
+  * Based on trichromacy
+    - Short, medium and long cone cells respond differently to different wavelengths of light
+  * But how continuous spectra is converted to RGB?
+** CIE Standard observer 1
+  * International Commission on Illumination (CIE)
+  * Scale spectra and integrate
+  * Many spectra = same color
+  * However, impossible to display, because of unphysical primaries
+** Chromaticity diagram + sRGB triangle
+  * All possible color at constant brightness
+    - Brightness normalized chroma from xyz color
+  * Monochromatic spectra at the edges
+  * Most commonly used colorspace for displays is sRGB
+    - subset of xyz
+  * First tried to play with xyz, but run into problems of undisplayable colors
+* Permutations 3 - 6
+  * 3: No change
+  * 4: Red not changed
+  * 5: Green not changed
+  * 6: Blue not changed
+* Channels 7
+  * 0: urban, nature, people
+  * 1: people, nature, urban
+  * 2: nature, urban, people
+  * 3: people, urban, nature
+  * 4: nature, people, urban
+  * 5: urban, people, nature
+* Hidden 8 - 10
+  * val = 0.05 * (20 - view)
+  * last value = 0.005
+* Movement 11
+  * Color is not the only source of information

@@ -12,7 +12,7 @@ pub struct Combination<'a> {
 impl<'a> Combination<'a> {
     pub fn new(n: usize, image1: Image<'a>, image2: Image<'a>) -> Self {
         Self {
-            i: n / 2,
+            i: n - 1,
             n,
             image1,
             image2,
@@ -38,7 +38,7 @@ impl SceneT for Combination<'_> {
     fn toggle(&mut self) {}
 
     fn image(&self) -> Image {
-        let scale = self.i as f32 / (self.n - 1) as f32;
+        let scale = (self.i as f32 / (self.n - 1) as f32).min(0.995);
         Image::add(&self.image1.uscale(1.0 - scale), &self.image2.uscale(scale))
     }
 }
